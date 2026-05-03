@@ -1,0 +1,984 @@
+
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>بروفايل اللاعب | Player Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --bg-deep: #020617;
+      --bg-surface: #0a0f1f;
+      --bg-elevated: #111827;
+      --bg-card: #151d2e;
+      --accent: #4facfe;
+      --accent2: #00f2fe;
+      --gold: #f5c842;
+      --red: #ff4757;
+      --green: #2ed573;
+      --purple: #a55eea;
+      --orange: #ff6b35;
+      --text: #e8ecf1;
+      --text-secondary: #94a3b8;
+      --border: rgba(255,255,255,0.05);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+      --radius-xl: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; }
+
+    body {
+      background: var(--bg-deep);
+      background-image:
+        radial-gradient(ellipse at 20% 0%, #1a2744 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, #0f1a30 0%, transparent 60%);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 10px; direction: rtl;
+    }
+
+    .app-container {
+      max-width: 520px; width: 100%; background: var(--bg-surface);
+      border-radius: 36px; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.03);
+      overflow: hidden; position: relative; color: var(--text);
+    }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); z-index: 10;
+    }
+    .header h1 {
+      font-size: 19px; font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .lang-btn {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text); padding: 7px 14px; border-radius: 22px;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 5px; transition: all 0.3s;
+    }
+    .lang-btn:hover { background: rgba(79,172,254,0.2); border-color: var(--accent); }
+
+    .player-bar {
+      display: flex; gap: 8px; padding: 12px 18px; align-items: center;
+    }
+    .player-bar select {
+      flex: 1; padding: 11px 14px; border-radius: 22px;
+      background: var(--bg-elevated); border: 1px solid #232d42;
+      color: white; font-weight: 700; font-size: 13px; outline: none;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat; background-position: left 12px center;
+    }
+    .btn-circle {
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all 0.3s; flex-shrink: 0;
+    }
+    .btn-add { background: var(--accent); color: #000; box-shadow: 0 6px 20px rgba(79,172,254,0.4); }
+    .btn-del { background: var(--red); color: #fff; box-shadow: 0 6px 20px rgba(255,71,87,0.4); }
+    .btn-circle:hover { transform: scale(1.08); }
+
+    .tabs {
+      display: flex; margin: 4px 18px 8px; background: var(--bg-elevated);
+      border-radius: 28px; padding: 4px; gap: 3px; overflow-x: auto;
+    }
+    .tab {
+      flex: 1; min-width: fit-content; text-align: center; padding: 10px 8px;
+      font-weight: 700; font-size: 11px; border-radius: 24px;
+      color: var(--text-secondary); cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
+    }
+    .tab.active { background: var(--accent); color: #000; box-shadow: 0 4px 16px rgba(79,172,254,0.5); }
+
+    .content-scroll { padding: 8px 18px 20px; max-height: 560px; overflow-y: auto; }
+
+    .img-section { display: flex; justify-content: center; margin-bottom: 10px; }
+    .player-photo {
+      width: 100px; height: 100px; border-radius: 50%;
+      background: #1a2540; border: 3px solid var(--accent);
+      box-shadow: 0 0 30px rgba(79,172,254,0.3);
+      object-fit: cover; display: flex; align-items: center;
+      justify-content: center; font-size: 48px; color: white;
+      cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;
+    }
+    .player-photo:hover { border-color: var(--gold); box-shadow: 0 0 40px rgba(245,200,66,0.4); }
+    .player-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-badge {
+      position: absolute; bottom: 2px; right: 2px;
+      background: var(--accent); border-radius: 50%; width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000;
+    }
+
+    .card {
+      background: var(--bg-card); border-radius: var(--radius-xl);
+      padding: 16px; margin-bottom: 12px; border: 1px solid var(--border);
+    }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none;
+    }
+    .section-header h3 {
+      font-size: 15px; display: flex; align-items: center; gap: 8px; margin: 0;
+    }
+    .section-toggle {
+      background: rgba(255,255,255,0.04); border: none; color: var(--text-secondary);
+      width: 30px; height: 30px; border-radius: 50%; font-size: 14px;
+      cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center;
+    }
+    .section-toggle:hover { background: rgba(255,71,87,0.25); color: var(--red); }
+    .section-body { margin-top: 10px; font-size: 12px; line-height: 1.9; white-space: pre-line; }
+
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 18px; font-weight: 700; font-size: 11px; margin: 3px; }
+    .badge-pos { background: var(--accent); color: #000; }
+    .badge-age { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+
+    .circle-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+    .circle-stat { text-align: center; width: 68px; }
+    .circle {
+      width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; position: relative;
+    }
+    .circle::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--bg-card); }
+    .circle span { position: relative; z-index: 1; }
+    .circle-label { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .bar-label { width: 65px; font-size: 11px; color: var(--text-secondary); }
+    .bar-bg { flex: 1; height: 8px; background: #1a2540; border-radius: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+    .bar-val { width: 28px; font-size: 11px; font-weight: 700; text-align: center; }
+
+    .pitch-wrapper {
+      background: #0a1f0a; border-radius: var(--radius-xl); padding: 10px;
+      margin: 10px 0; border: 2px solid rgba(255,255,255,0.12);
+    }
+    .pitch-toolbar {
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 8px; padding: 6px; background: rgba(0,0,0,0.4); border-radius: 14px;
+    }
+    .pitch-toolbar button {
+      padding: 6px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05); color: white; cursor: pointer;
+      font-size: 11px; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+      font-family: 'Cairo', sans-serif;
+    }
+    .pitch-toolbar button.active { background: var(--accent); border-color: var(--accent); color: #000; }
+    .pitch-toolbar button:hover { background: rgba(255,255,255,0.15); }
+    .pitch-toolbar input {
+      width: 100px; padding: 6px 10px; border-radius: 14px;
+      background: #111827; border: 1px solid #2d3548; color: white;
+      font-size: 11px; font-family: 'Cairo', sans-serif;
+    }
+
+    .pitch-canvas-wrap {
+      position: relative; width: 100%; aspect-ratio: 3/4.5;
+      border-radius: 8px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);
+    }
+    canvas#pitchCanvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+
+    .heat-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px;
+      aspect-ratio: 5/3; margin-top: 8px;
+    }
+    .heat-cell { border-radius: 3px; }
+
+    .chart-area { margin: 10px 0; background: #111827; border-radius: 14px; padding: 14px; }
+    canvas.chart-canvas { width: 100% !important; max-height: 200px; }
+
+    .physio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .physio-item {
+      background: #111827; border-radius: 14px; padding: 14px; text-align: center;
+    }
+    .physio-item i { font-size: 22px; margin-bottom: 4px; }
+    .physio-item strong { font-size: 18px; display: block; margin-top: 4px; }
+
+    .edit-panel { background: var(--bg-card); border-radius: var(--radius-xl); padding: 16px; }
+    input, textarea {
+      width: 100%; background: #111827; border: 1px solid #1f2a3f;
+      border-radius: 12px; padding: 10px 12px; margin: 5px 0; color: #fff;
+      font-size: 12px; outline: none; transition: border 0.3s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    .save-btn {
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border: none; color: #000; font-weight: 900; padding: 14px;
+      border-radius: 24px; width: 100%; cursor: pointer; font-size: 14px;
+      margin-top: 8px; transition: all 0.3s;
+    }
+    .save-btn:hover { box-shadow: 0 8px 24px rgba(79,172,254,0.5); }
+
+    .footer {
+      text-align: center; padding: 12px; color: #4a5568;
+      font-size: 11px; border-top: 1px solid var(--border); letter-spacing: 0.5px;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="header">
+    <h1 id="mainTitle">📋 بروفايل اللاعب</h1>
+    <button class="lang-btn" id="langToggle"><i class="fas fa-globe"></i> <span id="langText">English</span></button>
+  </div>
+  <div class="player-bar">
+    <select id="playerSelect"></select>
+    <button class="btn-circle btn-add" id="addPlayerBtn"><i class="fas fa-plus"></i></button>
+    <button class="btn-circle btn-del" id="deletePlayerBtn"><i class="fas fa-trash"></i></button>
+  </div>
+  <div class="tabs" id="tabsContainer">
+    <div class="tab active" data-tab="overview"><i class="fas fa-id-card"></i> <span>الملف</span></div>
+    <div class="tab" data-tab="skills"><i class="fas fa-chart-pie"></i> <span>المهارات</span></div>
+    <div class="tab" data-tab="pitch"><i class="fas fa-futbol"></i> <span>الملعب</span></div>
+    <div class="tab" data-tab="trend"><i class="fas fa-chart-line"></i> <span>المستوى</span></div>
+    <div class="tab" data-tab="edit"><i class="fas fa-edit"></i> <span>تعديل</span></div>
+  </div>
+  <div class="content-scroll" id="profileContent"></div>
+  <div class="footer">Designed by Dr. Mustafa Karam</div>
+</div>
+<input type="file" id="photoInput" accept="image/*" style="display:none" onchange="window.uploadPhoto(event)">
+
+<script>
+(function() {
+  const STORAGE_KEY = 'pro_player_db_v7';
+  const PITCH_STORAGE_KEY = 'pitch_state_db_v7';
+  let players = [];
+  let currentPlayerId = null;
+  let currentLang = 'ar';
+  let hiddenSections = {};
+  let pitchState = { dots: [], arrows: [], tool: 'move' };
+
+  const i18n = {
+    ar: {
+      coreRole:'الدور الأساسي', defensiveDuties:'المهام الدفاعية',
+      positioning:'التمركز (POSITIONING)', transitions:'في التحولات',
+      technicalSkills:'المهارات الفنية', tacticalIntel:'الذكاء التكتيكي',
+      physical:'بدني', technical:'مهاري', tactical:'خططي',
+      pace:'سرعة', stamina:'تحمل', strength:'قوة', dribbling:'مراوغة',
+      passing:'تمرير', shooting:'تسديد', positioning2:'تمركز', vision:'رؤية',
+      strengths:'نقاط القوة', weaknesses:'نقاط الضعف', heatmap:'الخريطة الحرارية',
+      levelChart:'منحنى تطور المستوى', physicalTests:'اختبارات بدنية',
+      save:'حفظ', name:'الاسم', age:'العمر', position:'المركز',
+      heartRate:'معدل ضربات القلب', vo2max:'VO₂ Max', recovery:'سرعة الاستشفاء',
+      injuryRisk:'خطر الإصابة', deleteConfirm:'هل أنت متأكد من حذف هذا اللاعب؟',
+      hideSection:'إخفاء', showSection:'إظهار', noPlayers:'لا يوجد لاعبين',
+      addDot:'إضافة لاعب', addArrow:'سهم', clear:'مسح', move:'تحريك',
+      sprint30m:'سرعة 30م', agility:'رشاقة', endurance:'تحمل', jump:'قفزة عمودية',
+      tabOverview:'الملف', tabSkills:'المهارات', tabPitch:'الملعب', tabTrend:'المستوى', tabEdit:'تعديل',
+      appTitle:'📋 بروفايل اللاعب', playerNamePlaceholder:'اسم اللاعب'
+    },
+    en: {
+      coreRole:'Core Role', defensiveDuties:'Defensive Duties',
+      positioning:'Positioning', transitions:'In Transitions',
+      technicalSkills:'Technical Skills', tacticalIntel:'Tactical Intelligence',
+      physical:'Physical', technical:'Technical', tactical:'Tactical',
+      pace:'Pace', stamina:'Stamina', strength:'Strength', dribbling:'Dribbling',
+      passing:'Passing', shooting:'Shooting', positioning2:'Positioning', vision:'Vision',
+      strengths:'Strengths', weaknesses:'Weaknesses', heatmap:'Heat Map',
+      levelChart:'Level Trend', physicalTests:'Physical Tests',
+      save:'Save', name:'Name', age:'Age', position:'Position',
+      heartRate:'Heart Rate', vo2max:'VO₂ Max', recovery:'Recovery',
+      injuryRisk:'Injury Risk', deleteConfirm:'Are you sure you want to delete this player?',
+      hideSection:'Hide', showSection:'Show', noPlayers:'No players',
+      addDot:'Add Player', addArrow:'Arrow', clear:'Clear', move:'Move',
+      sprint30m:'30m Sprint', agility:'Agility', endurance:'Endurance', jump:'Vertical Jump',
+      tabOverview:'Profile', tabSkills:'Skills', tabPitch:'Pitch', tabTrend:'Level', tabEdit:'Edit',
+      appTitle:'📋 Player Profile', playerNamePlaceholder:'Player name'
+    }
+  };
+  function t(k) { return i18n[currentLang]?.[k] || k; }
+
+  function defaultPlayers() {
+    return [{
+      id:'w1', name:'لاعب الجناح', nameEn:'Winger Player', age:24,
+      position:'جناح أيمن', positionEn:'Right Winger',
+      pace:92, stamina:85, strength:68, dribbling:90, passing:82, shooting:84,
+      posSkill:88, vision:86,
+      strengths:'السرعة، المراوغة، العرضيات',
+      weaknesses:'ضربات الرأس',
+      heatmap:[0.1,0.3,0.9,0.6,0.2, 0.2,0.5,0.8,0.7,0.3, 0.1,0.4,0.7,0.5,0.2],
+      photo:'', positionX:78, positionY:35,
+      heartRate:65, vo2max:60, recovery:88, injuryRisk:10,
+      sprintTime:3.1, agilityTest:4.2, enduranceTest:92, jumpHeight:55,
+      levelHistory:[72,75,78,80,83,86,89,90,92],
+      coreRole:'مصدر الخطورة على الأطراف\nصانع الفرص\nمهاجم إضافي\nأول مدافع من الأمام',
+      defensiveDuties:'الضغط على الظهر المنافس\nالعودة لتغطية الظهر\nإغلاق المساحات على الطرف\nالمشاركة في الضغط العالي',
+      positioning:'عند امتلاك الكرة:\n• الالتزام بالخطوط لفتح الملعب\n• التحرك بين الظهير وقلب الدفاع\n• الدخول للعمق (HALF SPACE)\n• التحرك خلف خط الدفاع\n• تبادل المراكز مع المهاجم وصانع اللعب',
+      transitions:'• التحرك خلف خط الدفاع\n• التحرك بين الخطوط\n• تبادل المراكز مع المهاجم وصانع اللعب\n• تحرك بدون كرة',
+      technicalSkills:'السرعة والانطلاق\nالرشاقة والتوازن\nالتحمل العالي\nالتسارع',
+      tacticalIntel:'قراءة تحركات الظهر\nمعرفة متى تدخل للعمق\nاختيار القرار الصحيح\n(تمرير / تسديد / مراوغة)\nالتوقيت المثالي للجري'
+    }];
+  }
+
+  function loadPlayers() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      players = stored ? JSON.parse(stored) : defaultPlayers();
+    } catch(e) { players = defaultPlayers(); }
+    try {
+      hiddenSections = JSON.parse(localStorage.getItem('hidden_sec_v7') || '{}');
+    } catch(e) { hiddenSections = {}; }
+    try {
+      const savedPitch = localStorage.getItem(PITCH_STORAGE_KEY);
+      if(savedPitch) pitchState = JSON.parse(savedPitch);
+    } catch(e) { pitchState = { dots: [], arrows: [], tool: 'move' }; }
+  }
+  function savePlayers() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); } catch(e) {}
+  }
+  function saveHidden() {
+    try { localStorage.setItem('hidden_sec_v7', JSON.stringify(hiddenSections)); } catch(e) {}
+  }
+  function savePitchState() {
+    try { localStorage.setItem(PITCH_STORAGE_KEY, JSON.stringify(pitchState)); } catch(e) {}
+  }
+  function getPlayer(id) { return players.find(p => p.id === id); }
+
+  function populateSelect() {
+    const sel = document.getElementById('playerSelect');
+    if(!sel) return;
+    sel.innerHTML = '';
+    players.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = currentLang==='ar' ? p.name : (p.nameEn||p.name);
+      sel.appendChild(opt);
+    });
+    if(players.length>0 && !currentPlayerId) { currentPlayerId=players[0].id; sel.value=currentPlayerId; }
+    if(!players.length) currentPlayerId=null;
+  }
+
+  function isHidden(s) { return hiddenSections[currentPlayerId+'_'+s]||false; }
+  window.toggleSection = function(s) {
+    hiddenSections[currentPlayerId+'_'+s] = !isHidden(s);
+    saveHidden();
+    renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
+  };
+
+  function sectionCard(titleKey, icon, content, secId) {
+    const hidden = isHidden(secId);
+    return `
+      <div class="card" id="section-${secId}">
+        <div class="section-header" onclick="window.toggleSection('${secId}')">
+          <h3><i class="fas ${icon}" style="color:var(--accent);"></i> ${t(titleKey)}</h3>
+          <button class="section-toggle"><i class="fas fa-${hidden?'plus':'minus'}"></i></button>
+        </div>
+        <div class="section-body ${hidden?'hidden':''}" id="body-${secId}">${content}</div>
+      </div>`;
+  }
+
+  function renderTab(tabId) {
+    if(!currentPlayerId) {
+      document.getElementById('profileContent').innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-secondary);">${t('noPlayers')}</p>`;
+      return;
+    }
+    const p = getPlayer(currentPlayerId);
+    if(!p) return;
+    const c = document.getElementById('profileContent');
+    const name = currentLang==='ar'?p.name:(p.nameEn||p.name);
+    const pos = currentLang==='ar'?p.position:(p.positionEn||p.position);
+
+    if(tabId==='overview') {
+      c.innerHTML = `
+        <div class="img-section">
+          <div class="player-photo" onclick="document.getElementById('photoInput').click()">
+            ${p.photo?`<img src="${p.photo}" alt="">`:`<i class="fas fa-user-circle"></i>`}
+            <div class="photo-badge"><i class="fas fa-camera"></i></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>${name} <span class="badge badge-pos">${pos}</span> <span class="badge badge-age">${t('age')}: ${p.age}</span></h3>
+          <div class="circle-row">
+            <div class="circle-stat"><div class="circle" style="background:conic-gradient(#4facfe 0deg ${p.pace*3.6}deg, #1a2540 ${p.pace*3.6}deg 360deg);"><span>${p.pace}</span></div><div class="circle-label">${t('pace')}</div></div>
+            <div class="circle-stat"><div class="circle" style="background:conic-gradient(#f5c842 0deg ${p.shooting*3.6}deg, #1a2540 ${p.shooting*3.6}deg 360deg);"><span>${p.shooting}</span></div><div class="circle-label">${t('shooting')}</div></div>
+            <div class="circle-stat"><div class="circle" style="background:conic-gradient(#2ed573 0deg ${p.dribbling*3.6}deg, #1a2540 ${p.dribbling*3.6}deg 360deg);"><span>${p.dribbling}</span></div><div class="circle-label">${t('dribbling')}</div></div>
+            <div class="circle-stat"><div class="circle" style="background:conic-gradient(#a55eea 0deg ${p.passing*3.6}deg, #1a2540 ${p.passing*3.6}deg 360deg);"><span>${p.passing}</span></div><div class="circle-label">${t('passing')}</div></div>
+            <div class="circle-stat"><div class="circle" style="background:conic-gradient(#ff6b35 0deg ${p.vision*3.6}deg, #1a2540 ${p.vision*3.6}deg 360deg);"><span>${p.vision}</span></div><div class="circle-label">${t('vision')}</div></div>
+          </div>
+        </div>
+        ${sectionCard('coreRole','fa-bullseye',(p.coreRole||''), 'coreRole')}
+        ${sectionCard('defensiveDuties','fa-shield-alt',(p.defensiveDuties||''), 'defensiveDuties')}
+        ${sectionCard('positioning','fa-map-pin',(p.positioning||''), 'positioning')}
+        ${sectionCard('transitions','fa-arrows-spin',(p.transitions||''), 'transitions')}
+        ${sectionCard('technicalSkills','fa-bolt',(p.technicalSkills||''), 'technicalSkills')}
+        ${sectionCard('tacticalIntel','fa-brain',(p.tacticalIntel||''), 'tacticalIntel')}
+        <div class="card">
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;background:#111827;border-radius:14px;padding:12px;">
+              <i class="fas fa-check-circle" style="color:#2ed573;"></i> <strong>${t('strengths')}</strong>
+              <p style="font-size:11px;margin-top:4px;">${p.strengths||''}</p>
+            </div>
+            <div style="flex:1;background:#111827;border-radius:14px;padding:12px;">
+              <i class="fas fa-exclamation-triangle" style="color:#ff4757;"></i> <strong>${t('weaknesses')}</strong>
+              <p style="font-size:11px;margin-top:4px;">${p.weaknesses||''}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    else if(tabId==='skills') {
+      c.innerHTML = `
+        <div class="card">
+          <h4><i class="fas fa-chart-line" style="color:var(--accent);"></i> ${t('physical')}</h4>
+          ${['pace','stamina','strength'].map(s=>`
+            <div class="bar-row"><span class="bar-label">${t(s)}</span><div class="bar-bg"><div class="bar-fill" style="width:${p[s]||50}%;background:linear-gradient(90deg,#4facfe,#00f2fe);"></div></div><span class="bar-val">${p[s]||50}</span></div>
+          `).join('')}
+          <h4><i class="fas fa-magic" style="color:var(--gold);"></i> ${t('technical')}</h4>
+          ${['dribbling','passing','shooting'].map(s=>`
+            <div class="bar-row"><span class="bar-label">${t(s)}</span><div class="bar-bg"><div class="bar-fill" style="width:${p[s]||50}%;background:linear-gradient(90deg,#f5c842,#ff9f43);"></div></div><span class="bar-val">${p[s]||50}</span></div>
+          `).join('')}
+          <h4><i class="fas fa-brain" style="color:var(--purple);"></i> ${t('tactical')}</h4>
+          ${['posSkill','vision'].map(s=>`
+            <div class="bar-row"><span class="bar-label">${t(s==='posSkill'?'positioning2':'vision')}</span><div class="bar-bg"><div class="bar-fill" style="width:${p[s]||50}%;background:linear-gradient(90deg,#a55eea,#c99ffb);"></div></div><span class="bar-val">${p[s]||50}</span></div>
+          `).join('')}
+        </div>
+        <div class="card">
+          <h4><i class="fas fa-heartbeat" style="color:var(--red);"></i> ${t('physicalTests')}</h4>
+          <div class="physio-grid">
+            <div class="physio-item"><i class="fas fa-stopwatch" style="color:#4facfe;"></i><br>${t('sprint30m')}<br><strong>${p.sprintTime||3.1} ث</strong></div>
+            <div class="physio-item"><i class="fas fa-arrows-alt" style="color:#2ed573;"></i><br>${t('agility')}<br><strong>${p.agilityTest||4.2} ث</strong></div>
+            <div class="physio-item"><i class="fas fa-heart" style="color:#ff4757;"></i><br>${t('heartRate')}<br><strong>${p.heartRate||65} bpm</strong></div>
+            <div class="physio-item"><i class="fas fa-lungs" style="color:#4facfe;"></i><br>${t('vo2max')}<br><strong>${p.vo2max||60}</strong></div>
+            <div class="physio-item"><i class="fas fa-sync-alt" style="color:#2ed573;"></i><br>${t('recovery')}<br><strong>${p.recovery||88}%</strong></div>
+            <div class="physio-item"><i class="fas fa-shield-alt" style="color:#f5c842;"></i><br>${t('injuryRisk')}<br><strong>${p.injuryRisk||10}%</strong></div>
+            <div class="physio-item"><i class="fas fa-running" style="color:#ff6b35;"></i><br>${t('endurance')}<br><strong>${p.enduranceTest||92}%</strong></div>
+            <div class="physio-item"><i class="fas fa-arrow-up" style="color:#a55eea;"></i><br>${t('jump')}<br><strong>${p.jumpHeight||55} سم</strong></div>
+          </div>
+        </div>
+      `;
+    }
+    else if(tabId==='pitch') {
+      c.innerHTML = `
+        <div class="pitch-wrapper">
+          <div class="pitch-toolbar">
+            <button id="toolMove" class="active" onclick="window.setTool('move')"><i class="fas fa-hand-pointer"></i> ${t('move')}</button>
+            <button id="toolDot" onclick="window.setTool('dot')"><i class="fas fa-user-plus"></i> ${t('addDot')}</button>
+            <button id="toolArrow" onclick="window.setTool('arrow')"><i class="fas fa-arrow-right"></i> ${t('addArrow')}</button>
+            <button onclick="window.clearPitch()"><i class="fas fa-trash"></i> ${t('clear')}</button>
+            <input type="text" id="newPlayerNameInput" placeholder="${t('playerNamePlaceholder')}">
+          </div>
+          <div class="pitch-canvas-wrap">
+            <canvas id="pitchCanvas"></canvas>
+          </div>
+          <p style="text-align:center;font-size:10px;color:var(--text-secondary);margin-top:6px;">أدخل اسم اللاعب ثم اضغط على الملعب لإضافته - غير محدود</p>
+        </div>
+        <div class="card">
+          <h4><i class="fas fa-fire" style="color:orange;"></i> ${t('heatmap')}</h4>
+          <div class="heat-grid">${(p.heatmap||Array(15).fill(0.3)).map(v=>`<div class="heat-cell" style="background:rgba(255,69,0,${Math.min(v,1)});"></div>`).join('')}</div>
+        </div>
+      `;
+      setTimeout(() => { initPitch(p); }, 200);
+    }
+    else if(tabId==='trend') {
+      c.innerHTML = `
+        <div class="card">
+          <h4><i class="fas fa-chart-line" style="color:var(--accent);"></i> ${t('levelChart')}</h4>
+          <div class="chart-area"><canvas id="trendChart" class="chart-canvas"></canvas></div>
+        </div>
+        <div class="card">
+          <h4><i class="fas fa-chart-bar" style="color:var(--gold);"></i> مقارنة القدرات</h4>
+          <div class="chart-area"><canvas id="radarChart" class="chart-canvas"></canvas></div>
+        </div>
+      `;
+      setTimeout(() => { drawTrendChart(p); drawRadarChart(p); }, 100);
+    }
+    else if(tabId==='edit') {
+      c.innerHTML = `
+        <div class="edit-panel">
+          <label>${t('name')} (عربي)</label><input id="eNameAr" value="${p.name||''}">
+          <label>${t('name')} (English)</label><input id="eNameEn" value="${p.nameEn||''}">
+          <label>${t('age')}</label><input id="eAge" type="number" value="${p.age||20}">
+          <label>${t('position')} (عربي)</label><input id="ePosAr" value="${p.position||''}">
+          <label>${t('position')} (English)</label><input id="ePosEn" value="${p.positionEn||''}">
+          ${['pace','stamina','strength','dribbling','passing','shooting','posSkill','vision'].map(s=>`
+            <label>${t(s==='posSkill'?'positioning2':s)} (0-99)</label><input id="e_${s}" type="number" value="${p[s]||50}" min="0" max="99">
+          `).join('')}
+          <label>${t('strengths')}</label><input id="eStr" value="${p.strengths||''}">
+          <label>${t('weaknesses')}</label><input id="eWeak" value="${p.weaknesses||''}">
+          <label>${t('sprint30m')} (ث)</label><input id="eSprint" type="number" value="${p.sprintTime||3.1}" step="0.1">
+          <label>${t('agility')} (ث)</label><input id="eAgility" type="number" value="${p.agilityTest||4.2}" step="0.1">
+          <label>${t('endurance')} (%)</label><input id="eEndurance" type="number" value="${p.enduranceTest||92}">
+          <label>${t('jump')} (سم)</label><input id="eJump" type="number" value="${p.jumpHeight||55}">
+          <label>${t('heartRate')}</label><input id="eHR" type="number" value="${p.heartRate||65}">
+          <label>${t('vo2max')}</label><input id="eVO2" type="number" value="${p.vo2max||60}">
+          <label>${t('recovery')} (%)</label><input id="eRec" type="number" value="${p.recovery||88}">
+          <label>${t('injuryRisk')} (%)</label><input id="eInj" type="number" value="${p.injuryRisk||10}">
+          ${[
+            ['eCoreRole','coreRole',t('coreRole')],
+            ['eDef','defensiveDuties',t('defensiveDuties')],
+            ['ePosSec','positioning',t('positioning')],
+            ['eTrans','transitions',t('transitions')],
+            ['eTech','technicalSkills',t('technicalSkills')],
+            ['eTac','tacticalIntel',t('tacticalIntel')]
+          ].map(([id,key,label])=>`
+            <label>${label}</label><textarea id="${id}">${p[key]||''}</textarea>
+          `).join('')}
+          <button class="save-btn" id="saveEditBtn"><i class="fas fa-save"></i> ${t('save')}</button>
+        </div>
+      `;
+      document.getElementById('saveEditBtn').addEventListener('click', saveEdit);
+    }
+  }
+
+  // رسم الملعب الكامل مع نصف تيشيرت
+  function initPitch(p) {
+    const canvas = document.getElementById('pitchCanvas');
+    if(!canvas) return;
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.clientWidth * 2;
+    canvas.height = wrap.clientHeight * 2;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const pw = w * 0.08, ph = h * 0.06;
+    let dragIndex = -1, arrowStart = null;
+    let offsetX = 0, offsetY = 0;
+
+    function drawPitch() {
+      ctx.clearRect(0,0,w,h);
+      // خلفية الملعب
+      ctx.fillStyle = '#1a7a1a'; ctx.fillRect(0,0,w,h);
+      // خطوط العشب
+      for(let i=0;i<14;i++) {
+        ctx.fillStyle = i%2===0?'#1d8520':'#187518';
+        ctx.fillRect(0,i*h/14,w,h/14);
+      }
+      // الحدود
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3;
+      ctx.strokeRect(pw, ph, w-pw*2, h-ph*2);
+      // خط المنتصف
+      ctx.beginPath(); ctx.moveTo(w/2, ph); ctx.lineTo(w/2, h-ph); ctx.stroke();
+      // دائرة المنتصف
+      ctx.beginPath(); ctx.arc(w/2, h/2, w*0.08, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(w/2, h/2, 4, 0, Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+      // علامة منتصف الملعب
+      ctx.fillStyle='white'; ctx.fillRect(w/2-1.5, ph, 3, h*0.03);
+      ctx.fillRect(w/2-1.5, h-ph-h*0.03, 3, h*0.03);
+      // منطقة الجزاء
+      const bx = w*0.2, by = ph, bw = w*0.6, bh = h*0.16;
+      ctx.strokeRect(bx, by, bw, bh);
+      ctx.strokeRect(bx, h-ph-bh, bw, bh);
+      // منطقة المرمى
+      const gx = w*0.32, gy = ph, gw = w*0.36, gh = h*0.06;
+      ctx.strokeRect(gx, gy, gw, gh);
+      ctx.strokeRect(gx, h-ph-gh, gw, gh);
+      // نقطة الجزاء
+      ctx.beginPath(); ctx.arc(w/2, ph+bh/2, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(w/2, h-ph-bh/2, 3, 0, Math.PI*2); ctx.fill();
+      // دوائر الركنيات
+      const cr = w*0.02;
+      ctx.beginPath(); ctx.arc(pw, ph, cr, 0, Math.PI/2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(w-pw, ph, cr, Math.PI/2, Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(pw, h-ph, cr, Math.PI*1.5, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(w-pw, h-ph, cr, Math.PI, Math.PI*1.5); ctx.stroke();
+    }
+
+    function drawHalfShirt(x, y, r, color, name) {
+      ctx.save();
+      // الجسم
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x-r*0.4, y-r*0.5);
+      ctx.lineTo(x+r*0.4, y-r*0.5);
+      ctx.lineTo(x+r*0.5, y+r*0.3);
+      ctx.lineTo(x+r*0.15, y+r*0.6);
+      ctx.lineTo(x-r*0.15, y+r*0.6);
+      ctx.lineTo(x-r*0.5, y+r*0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // الرأس
+      ctx.fillStyle = '#f5c0a0';
+      ctx.beginPath();
+      ctx.arc(x, y-r*0.65, r*0.35, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.stroke();
+      // الرقم
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${r*0.4}px Cairo`;
+      ctx.textAlign = 'center';
+      ctx.fillText('10', x, y+r*0.1);
+      // الاسم
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.font = `bold ${r*0.3}px Cairo`;
+      const tw = ctx.measureText(name).width + 10;
+      ctx.fillRect(x-tw/2, y+r*0.7, tw, r*0.4);
+      ctx.fillStyle = 'white';
+      ctx.fillText(name, x, y+r*1.0);
+      ctx.restore();
+    }
+
+    function drawArrows() {
+      pitchState.arrows.forEach(a => {
+        const x1=a.x1*w, y1=a.y1*h, x2=a.x2*w, y2=a.y2*h;
+        ctx.strokeStyle = a.color||'#ff6b35'; ctx.lineWidth = 3;
+        ctx.setLineDash([8,4]);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        ctx.setLineDash([]);
+        const ang = Math.atan2(y2-y1, x2-x1);
+        ctx.fillStyle = a.color||'#ff6b35';
+        ctx.beginPath(); ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-12*Math.cos(ang-0.5), y2-12*Math.sin(ang-0.5));
+        ctx.lineTo(x2-12*Math.cos(ang+0.5), y2-12*Math.sin(ang+0.5));
+        ctx.closePath(); ctx.fill();
+      });
+    }
+
+    function redraw() {
+      drawPitch();
+      drawArrows();
+      pitchState.dots.forEach((d,i) => {
+        const x = d.x * w, y = d.y * h;
+        const color = i===0 ? '#f5c842' : d.color || '#4facfe';
+        drawHalfShirt(x, y, w*0.04, color, d.name || '');
+      });
+    }
+
+    if(pitchState.dots.length===0 && p) {
+      pitchState.dots.push({
+        x: (p.positionX||78)/100,
+        y: (p.positionY||35)/100,
+        name: currentLang==='ar'?p.name:(p.nameEn||p.name),
+        color: '#f5c842'
+      });
+    }
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches?e.touches[0].clientX:e.clientX;
+      const clientY = e.touches?e.touches[0].clientY:e.clientY;
+      return {x:(clientX-rect.left)/rect.width, y:(clientY-rect.top)/rect.height};
+    }
+
+    canvas.onmousedown = e => {
+      const pos = getPos(e);
+      if(pitchState.tool==='move') {
+        for(let i=pitchState.dots.length-1;i>=0;i--) {
+          const d = pitchState.dots[i];
+          if(Math.hypot(pos.x-d.x, pos.y-d.y) < 0.03) {
+            dragIndex = i;
+            offsetX = d.x - pos.x;
+            offsetY = d.y - pos.y;
+            break;
+          }
+        }
+      } else if(pitchState.tool==='dot') {
+        const nameInput = document.getElementById('newPlayerNameInput');
+        const name = nameInput?.value?.trim() || `لاعب ${pitchState.dots.length+1}`;
+        const colors = ['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842','#00f2fe','#ff9f43'];
+        pitchState.dots.push({
+          x: pos.x, y: pos.y,
+          name: name,
+          color: colors[pitchState.dots.length % colors.length]
+        });
+        savePitchState(); redraw();
+      } else if(pitchState.tool==='arrow') {
+        arrowStart = pos;
+      }
+    };
+    canvas.onmousemove = e => {
+      if(dragIndex>=0) {
+        const pos = getPos(e);
+        pitchState.dots[dragIndex].x = Math.min(0.96,Math.max(0.04, pos.x+offsetX));
+        pitchState.dots[dragIndex].y = Math.min(0.94,Math.max(0.06, pos.y+offsetY));
+        if(dragIndex===0 && p) {
+          p.positionX = Math.round(pitchState.dots[0].x*100);
+          p.positionY = Math.round(pitchState.dots[0].y*100);
+        }
+        redraw();
+      }
+    };
+    canvas.onmouseup = e => {
+      if(dragIndex>=0) {
+        if(dragIndex===0 && p) savePlayers();
+        savePitchState();
+      }
+      if(arrowStart && pitchState.tool==='arrow') {
+        const pos = getPos(e);
+        if(Math.hypot(pos.x-arrowStart.x, pos.y-arrowStart.y) > 0.015) {
+          pitchState.arrows.push({x1:arrowStart.x, y1:arrowStart.y, x2:pos.x, y2:pos.y, color:'#ff6b35'});
+          savePitchState(); redraw();
+        }
+        arrowStart = null;
+      }
+      dragIndex = -1;
+    };
+
+    canvas.ontouchstart = e => {
+      e.preventDefault(); const pos = getPos(e);
+      if(pitchState.tool==='move') {
+        for(let i=pitchState.dots.length-1;i>=0;i--) {
+          if(Math.hypot(pos.x-pitchState.dots[i].x, pos.y-pitchState.dots[i].y) < 0.03) {
+            dragIndex = i; offsetX = pitchState.dots[i].x - pos.x; offsetY = pitchState.dots[i].y - pos.y; break;
+          }
+        }
+      } else if(pitchState.tool==='dot') {
+        const nameInput = document.getElementById('newPlayerNameInput');
+        const name = nameInput?.value?.trim() || `لاعب ${pitchState.dots.length+1}`;
+        const colors = ['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842','#00f2fe','#ff9f43'];
+        pitchState.dots.push({
+          x: pos.x, y: pos.y,
+          name: name,
+          color: colors[pitchState.dots.length % colors.length]
+        });
+        savePitchState(); redraw();
+      } else if(pitchState.tool==='arrow') {
+        arrowStart = pos;
+      }
+    };
+    canvas.ontouchmove = e => {
+      e.preventDefault();
+      if(dragIndex>=0) {
+        const pos = getPos(e);
+        pitchState.dots[dragIndex].x = Math.min(0.96,Math.max(0.04, pos.x+offsetX));
+        pitchState.dots[dragIndex].y = Math.min(0.94,Math.max(0.06, pos.y+offsetY));
+        if(dragIndex===0 && p) { p.positionX=Math.round(pitchState.dots[0].x*100); p.positionY=Math.round(pitchState.dots[0].y*100); }
+        redraw();
+      }
+    };
+    canvas.ontouchend = () => {
+      if(dragIndex>=0 && dragIndex===0 && p) savePlayers();
+      if(dragIndex>=0) savePitchState();
+      dragIndex = -1; arrowStart = null;
+    };
+
+    redraw();
+  }
+
+  window.setTool = function(tool) {
+    pitchState.tool = tool;
+    ['toolMove','toolDot','toolArrow'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+    const idMap = {move:'toolMove', dot:'toolDot', arrow:'toolArrow'};
+    document.getElementById(idMap[tool])?.classList.add('active');
+    savePitchState();
+  };
+  window.clearPitch = function() {
+    pitchState.dots = pitchState.dots.slice(0,1);
+    pitchState.arrows = [];
+    const p = getPlayer(currentPlayerId);
+    if(p && pitchState.dots[0]) {
+      pitchState.dots[0] = {
+        x:(p.positionX||78)/100,
+        y:(p.positionY||35)/100,
+        name: currentLang==='ar'?p.name:(p.nameEn||p.name),
+        color: '#f5c842'
+      };
+    }
+    savePitchState();
+    const canvas = document.getElementById('pitchCanvas');
+    if(canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); initPitch(p); }
+  };
+
+  function drawTrendChart(p) {
+    const canvas = document.getElementById('trendChart');
+    if(!canvas) return;
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    const data = p.levelHistory||[70,72,75,78,80,83,86,88,90];
+    const w=canvas.width, h=canvas.height, pad=20, maxV=99, minV=40;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath(); ctx.strokeStyle='#4facfe'; ctx.lineWidth=3;
+    ctx.shadowColor='#4facfe'; ctx.shadowBlur=10;
+    data.forEach((v,i)=>{
+      const x=pad+(i/(data.length-1))*(w-pad*2);
+      const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.shadowBlur=0;
+    data.forEach((v,i)=>{
+      const x=pad+(i/(data.length-1))*(w-pad*2);
+      const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2);
+      ctx.fillStyle='#4facfe'; ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='bold 10px Cairo'; ctx.textAlign='center'; ctx.fillText(v,x,y-14);
+    });
+  }
+
+  function drawRadarChart(p) {
+    const canvas = document.getElementById('radarChart');
+    if(!canvas) return;
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 220;
+    const ctx = canvas.getContext('2d');
+    const w=canvas.width, h=canvas.height, cx=w/2, cy=h/2, r=Math.min(w,h)/2-20;
+    const labels = [t('pace'),t('stamina'),t('strength'),t('dribbling'),t('passing'),t('shooting'),t('positioning2'),t('vision')];
+    const vals = [p.pace||50,p.stamina||50,p.strength||50,p.dribbling||50,p.passing||50,p.shooting||50,p.posSkill||50,p.vision||50];
+    const n=labels.length;
+    ctx.clearRect(0,0,w,h);
+    for(let j=5;j>=1;j--) {
+      ctx.beginPath();
+      for(let i=0;i<n;i++) {
+        const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(j/5);
+        const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.stroke();
+    }
+    ctx.beginPath();
+    vals.forEach((v,i)=>{
+      const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(v/99);
+      const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath(); ctx.fillStyle='rgba(79,172,254,0.3)'; ctx.fill();
+    ctx.strokeStyle='#4facfe'; ctx.lineWidth=2; ctx.stroke();
+    labels.forEach((l,i)=>{
+      const ang=(Math.PI*2/n)*i-Math.PI/2, x=cx+(r+15)*Math.cos(ang), y=cy+(r+15)*Math.sin(ang);
+      ctx.fillStyle='#fff'; ctx.font='10px Cairo'; ctx.textAlign='center'; ctx.fillText(l,x,y);
+    });
+  }
+
+  function saveEdit() {
+    const p = getPlayer(currentPlayerId); if(!p) return;
+    p.name = document.getElementById('eNameAr')?.value||p.name||'';
+    p.nameEn = document.getElementById('eNameEn')?.value||p.nameEn||'';
+    p.age = parseInt(document.getElementById('eAge')?.value)||p.age||20;
+    p.position = document.getElementById('ePosAr')?.value||p.position||'';
+    p.positionEn = document.getElementById('ePosEn')?.value||p.positionEn||'';
+    ['pace','stamina','strength','dribbling','passing','shooting','posSkill','vision'].forEach(s=>{
+      const v=parseInt(document.getElementById('e_'+s)?.value);
+      if(!isNaN(v)) p[s]=Math.min(99,Math.max(0,v));
+    });
+    p.strengths = document.getElementById('eStr')?.value||p.strengths||'';
+    p.weaknesses = document.getElementById('eWeak')?.value||p.weaknesses||'';
+    p.sprintTime = parseFloat(document.getElementById('eSprint')?.value)||p.sprintTime||3.1;
+    p.agilityTest = parseFloat(document.getElementById('eAgility')?.value)||p.agilityTest||4.2;
+    p.enduranceTest = parseInt(document.getElementById('eEndurance')?.value)||p.enduranceTest||92;
+    p.jumpHeight = parseInt(document.getElementById('eJump')?.value)||p.jumpHeight||55;
+    p.heartRate = parseInt(document.getElementById('eHR')?.value)||p.heartRate||65;
+    p.vo2max = parseInt(document.getElementById('eVO2')?.value)||p.vo2max||60;
+    p.recovery = parseInt(document.getElementById('eRec')?.value)||p.recovery||88;
+    p.injuryRisk = parseInt(document.getElementById('eInj')?.value)||p.injuryRisk||10;
+    ['coreRole','defensiveDuties','positioning','transitions','technicalSkills','tacticalIntel'].forEach((key,i)=>{
+      const ids = ['eCoreRole','eDef','ePosSec','eTrans','eTech','eTac'];
+      const el = document.getElementById(ids[i]);
+      if(el) p[key] = el.value||p[key]||'';
+    });
+    savePlayers();
+    // تحديث اسم اللاعب في الملعب
+    if(pitchState.dots.length>0) {
+      pitchState.dots[0].name = currentLang==='ar'?p.name:(p.nameEn||p.name);
+      savePitchState();
+    }
+    populateSelect();
+    renderTab('overview');
+    alert('تم الحفظ ✓');
+  }
+
+  window.uploadPhoto = function(e) {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image(); img.src = ev.target.result;
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const size = Math.min(img.width, img.height);
+        canvas.width = 200; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.beginPath(); ctx.arc(100,100,98,0,Math.PI*2); ctx.clip();
+        ctx.drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 200, 200);
+        const p = getPlayer(currentPlayerId);
+        if(p) { p.photo = canvas.toDataURL(); savePlayers(); }
+        renderTab('overview');
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+
+  function deletePlayer() {
+    if(!currentPlayerId) return;
+    if(!confirm(t('deleteConfirm'))) return;
+    players = players.filter(p=>p.id!==currentPlayerId);
+    savePlayers();
+    currentPlayerId = players.length ? players[0].id : null;
+    populateSelect();
+    if(currentPlayerId) document.getElementById('playerSelect').value = currentPlayerId;
+    else document.getElementById('profileContent').innerHTML = `<p style="text-align:center;padding:40px;">${t('noPlayers')}</p>`;
+    renderTab('overview');
+  }
+
+  function addPlayer() {
+    const id = Date.now().toString();
+    players.push({
+      id, name:'لاعب جديد', nameEn:'New Player', age:22,
+      position:'جناح', positionEn:'Winger',
+      pace:75,stamina:75,strength:70,dribbling:78,passing:75,shooting:72,posSkill:75,vision:75,
+      strengths:'',weaknesses:'',
+      heatmap:Array(15).fill(0.3), photo:'', positionX:75,positionY:40,
+      heartRate:68,vo2max:55,recovery:80,injuryRisk:15,
+      sprintTime:3.3,agilityTest:4.5,enduranceTest:80,jumpHeight:45,
+      levelHistory:[65,67,70,72,74,75],
+      coreRole:'',defensiveDuties:'',positioning:'',transitions:'',technicalSkills:'',tacticalIntel:''
+    });
+    savePlayers(); populateSelect();
+    currentPlayerId = id;
+    document.getElementById('playerSelect').value = id;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab="overview"]').classList.add('active');
+    renderTab('overview');
+  }
+
+  function switchLang() {
+    currentLang = currentLang==='ar'?'en':'ar';
+    document.getElementById('langText').textContent = currentLang==='ar'?'English':'العربية';
+    document.getElementById('mainTitle').textContent = t('appTitle');
+    document.querySelectorAll('.tab').forEach(tab=>{
+      const k=tab.dataset.tab;
+      const titles = {overview:'tabOverview', skills:'tabSkills', pitch:'tabPitch', trend:'tabTrend', edit:'tabEdit'};
+      const icons = {overview:'fa-id-card', skills:'fa-chart-pie', pitch:'fa-futbol', trend:'fa-chart-line', edit:'fa-edit'};
+      if(titles[k]) tab.innerHTML = `<i class="fas ${icons[k]}"></i> <span>${t(titles[k])}</span>`;
+    });
+    // تحديث اسم اللاعب الأول في الملعب
+    if(pitchState.dots.length>0 && currentPlayerId) {
+      const p = getPlayer(currentPlayerId);
+      if(p) pitchState.dots[0].name = currentLang==='ar'?p.name:(p.nameEn||p.name);
+      savePitchState();
+    }
+    populateSelect();
+    renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
+  }
+
+  window.addEventListener('load', ()=>{
+    loadPlayers(); populateSelect();
+    if(players.length>0){
+      currentPlayerId=players[0].id;
+      document.getElementById('playerSelect').value=currentPlayerId;
+    }
+    renderTab('overview');
+    document.getElementById('playerSelect').addEventListener('change', e=>{
+      currentPlayerId=e.target.value;
+      // تحديث الملعب للاعب الجديد
+      const p = getPlayer(currentPlayerId);
+      if(p && pitchState.dots.length>0) {
+        pitchState.dots[0] = {
+          x: (p.positionX||78)/100,
+          y: (p.positionY||35)/100,
+          name: currentLang==='ar'?p.name:(p.nameEn||p.name),
+          color: '#f5c842'
+        };
+        savePitchState();
+      }
+      renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
+    });
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click', function(){
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        this.classList.add('active');
+        renderTab(this.dataset.tab);
+      });
+    });
+    document.getElementById('langToggle').addEventListener('click', switchLang);
+    document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+    document.getElementById('deletePlayerBtn').addEventListener('click', deletePlayer);
+  });
+})();
+</script>
+</body>
+</html>
+```
