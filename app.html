@@ -1,12 +1,21 @@
-
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>بروفايل اللاعب | Player Profile</title>
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIti52LHZgNmE2Yog2KfZhNmE2YXZg9iqIiwKICAic2hvcnRfbmFtZSI6ICJQbGF5ZXIgUHJvZmlsZSIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBhMGUxNyIsCiAgInRoZW1lX2NvbG9yIjogIiM0ZmFjZmUiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVVQUFBQWdBQUFBSUFJQ0FOUUFBQUFEd1V0b0FBQUFBR1hSRldIUlRiMlowZDJGeVpRQkJaRzlpWlNCSmJXRm5aVk4wWVhSMWN5NXVad0FBQUFDU1VSQlZIaWM3LzE4QUFBQUJYcE9TVkU9IiwKICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICJ0eXBlIjogImltYWdlL3BuZyIKICB9XQp9">
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#0a0f1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Player Profile">
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
   <style>
     :root {
       --bg-deep: #020617;
@@ -165,14 +174,13 @@
       padding: 6px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.05); color: white; cursor: pointer;
       font-size: 11px; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
-      font-family: 'Cairo', sans-serif;
     }
     .pitch-toolbar button.active { background: var(--accent); border-color: var(--accent); color: #000; }
     .pitch-toolbar button:hover { background: rgba(255,255,255,0.15); }
     .pitch-toolbar input {
       width: 100px; padding: 6px 10px; border-radius: 14px;
       background: #111827; border: 1px solid #2d3548; color: white;
-      font-size: 11px; font-family: 'Cairo', sans-serif;
+      font-size: 11px;
     }
 
     .pitch-canvas-wrap {
@@ -243,9 +251,16 @@
 <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="window.uploadPhoto(event)">
 
 <script>
+// Service Worker
+if('serviceWorker'in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('data:application/javascript;base64,'+btoa('self.addEventListener("fetch",e=>{})'))
+  })
+}
+
 (function() {
-  const STORAGE_KEY = 'pro_player_db_v7';
-  const PITCH_STORAGE_KEY = 'pitch_state_db_v7';
+  const STORAGE_KEY = 'pro_player_db_v8';
+  const PITCH_STORAGE_KEY = 'pitch_state_v8';
   let players = [];
   let currentPlayerId = null;
   let currentLang = 'ar';
@@ -319,23 +334,12 @@
       const stored = localStorage.getItem(STORAGE_KEY);
       players = stored ? JSON.parse(stored) : defaultPlayers();
     } catch(e) { players = defaultPlayers(); }
-    try {
-      hiddenSections = JSON.parse(localStorage.getItem('hidden_sec_v7') || '{}');
-    } catch(e) { hiddenSections = {}; }
-    try {
-      const savedPitch = localStorage.getItem(PITCH_STORAGE_KEY);
-      if(savedPitch) pitchState = JSON.parse(savedPitch);
-    } catch(e) { pitchState = { dots: [], arrows: [], tool: 'move' }; }
+    try { hiddenSections = JSON.parse(localStorage.getItem('hidden_sec_v8') || '{}'); } catch(e) { hiddenSections = {}; }
+    try { const sp = localStorage.getItem(PITCH_STORAGE_KEY); if(sp) pitchState = JSON.parse(sp); } catch(e) { pitchState = { dots: [], arrows: [], tool: 'move' }; }
   }
-  function savePlayers() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); } catch(e) {}
-  }
-  function saveHidden() {
-    try { localStorage.setItem('hidden_sec_v7', JSON.stringify(hiddenSections)); } catch(e) {}
-  }
-  function savePitchState() {
-    try { localStorage.setItem(PITCH_STORAGE_KEY, JSON.stringify(pitchState)); } catch(e) {}
-  }
+  function savePlayers() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(players)); } catch(e) {} }
+  function saveHidden() { try { localStorage.setItem('hidden_sec_v8', JSON.stringify(hiddenSections)); } catch(e) {} }
+  function savePitchState() { try { localStorage.setItem(PITCH_STORAGE_KEY, JSON.stringify(pitchState)); } catch(e) {} }
   function getPlayer(id) { return players.find(p => p.id === id); }
 
   function populateSelect() {
@@ -373,7 +377,7 @@
 
   function renderTab(tabId) {
     if(!currentPlayerId) {
-      document.getElementById('profileContent').innerHTML = `<p style="text-align:center;padding:40px;color:var(--text-secondary);">${t('noPlayers')}</p>`;
+      document.getElementById('profileContent').innerHTML = `<p style="text-align:center;padding:40px;">${t('noPlayers')}</p>`;
       return;
     }
     const p = getPlayer(currentPlayerId);
@@ -464,7 +468,6 @@
           <div class="pitch-canvas-wrap">
             <canvas id="pitchCanvas"></canvas>
           </div>
-          <p style="text-align:center;font-size:10px;color:var(--text-secondary);margin-top:6px;">أدخل اسم اللاعب ثم اضغط على الملعب لإضافته - غير محدود</p>
         </div>
         <div class="card">
           <h4><i class="fas fa-fire" style="color:orange;"></i> ${t('heatmap')}</h4>
@@ -524,7 +527,6 @@
     }
   }
 
-  // رسم الملعب الكامل مع نصف تيشيرت
   function initPitch(p) {
     const canvas = document.getElementById('pitchCanvas');
     if(!canvas) return;
@@ -534,41 +536,24 @@
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
     const pw = w * 0.08, ph = h * 0.06;
-    let dragIndex = -1, arrowStart = null;
-    let offsetX = 0, offsetY = 0;
+    let dragIndex = -1, offsetX = 0, offsetY = 0;
 
     function drawPitch() {
       ctx.clearRect(0,0,w,h);
-      // خلفية الملعب
       ctx.fillStyle = '#1a7a1a'; ctx.fillRect(0,0,w,h);
-      // خطوط العشب
-      for(let i=0;i<14;i++) {
-        ctx.fillStyle = i%2===0?'#1d8520':'#187518';
-        ctx.fillRect(0,i*h/14,w,h/14);
-      }
-      // الحدود
+      for(let i=0;i<14;i++) { ctx.fillStyle = i%2===0?'#1d8520':'#187518'; ctx.fillRect(0,i*h/14,w,h/14); }
       ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3;
       ctx.strokeRect(pw, ph, w-pw*2, h-ph*2);
-      // خط المنتصف
       ctx.beginPath(); ctx.moveTo(w/2, ph); ctx.lineTo(w/2, h-ph); ctx.stroke();
-      // دائرة المنتصف
       ctx.beginPath(); ctx.arc(w/2, h/2, w*0.08, 0, Math.PI*2); ctx.stroke();
       ctx.beginPath(); ctx.arc(w/2, h/2, 4, 0, Math.PI*2); ctx.fillStyle='white'; ctx.fill();
-      // علامة منتصف الملعب
-      ctx.fillStyle='white'; ctx.fillRect(w/2-1.5, ph, 3, h*0.03);
-      ctx.fillRect(w/2-1.5, h-ph-h*0.03, 3, h*0.03);
-      // منطقة الجزاء
+      ctx.fillStyle='white'; ctx.fillRect(w/2-1.5, ph, 3, h*0.03); ctx.fillRect(w/2-1.5, h-ph-h*0.03, 3, h*0.03);
       const bx = w*0.2, by = ph, bw = w*0.6, bh = h*0.16;
-      ctx.strokeRect(bx, by, bw, bh);
-      ctx.strokeRect(bx, h-ph-bh, bw, bh);
-      // منطقة المرمى
+      ctx.strokeRect(bx, by, bw, bh); ctx.strokeRect(bx, h-ph-bh, bw, bh);
       const gx = w*0.32, gy = ph, gw = w*0.36, gh = h*0.06;
-      ctx.strokeRect(gx, gy, gw, gh);
-      ctx.strokeRect(gx, h-ph-gh, gw, gh);
-      // نقطة الجزاء
+      ctx.strokeRect(gx, gy, gw, gh); ctx.strokeRect(gx, h-ph-gh, gw, gh);
       ctx.beginPath(); ctx.arc(w/2, ph+bh/2, 3, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(w/2, h-ph-bh/2, 3, 0, Math.PI*2); ctx.fill();
-      // دوائر الركنيات
       const cr = w*0.02;
       ctx.beginPath(); ctx.arc(pw, ph, cr, 0, Math.PI/2); ctx.stroke();
       ctx.beginPath(); ctx.arc(w-pw, ph, cr, Math.PI/2, Math.PI); ctx.stroke();
@@ -578,313 +563,116 @@
 
     function drawHalfShirt(x, y, r, color, name) {
       ctx.save();
-      // الجسم
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(x-r*0.4, y-r*0.5);
-      ctx.lineTo(x+r*0.4, y-r*0.5);
-      ctx.lineTo(x+r*0.5, y+r*0.3);
-      ctx.lineTo(x+r*0.15, y+r*0.6);
-      ctx.lineTo(x-r*0.15, y+r*0.6);
-      ctx.lineTo(x-r*0.5, y+r*0.3);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      // الرأس
-      ctx.fillStyle = '#f5c0a0';
-      ctx.beginPath();
-      ctx.arc(x, y-r*0.65, r*0.35, 0, Math.PI*2);
-      ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.stroke();
-      // الرقم
-      ctx.fillStyle = 'white';
-      ctx.font = `bold ${r*0.4}px Cairo`;
-      ctx.textAlign = 'center';
+      ctx.fillStyle = color; ctx.beginPath();
+      ctx.moveTo(x-r*0.4, y-r*0.5); ctx.lineTo(x+r*0.4, y-r*0.5);
+      ctx.lineTo(x+r*0.5, y+r*0.3); ctx.lineTo(x+r*0.15, y+r*0.6);
+      ctx.lineTo(x-r*0.15, y+r*0.6); ctx.lineTo(x-r*0.5, y+r*0.3);
+      ctx.closePath(); ctx.fill(); ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#f5c0a0'; ctx.beginPath(); ctx.arc(x, y-r*0.65, r*0.35, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='white'; ctx.font=`bold ${r*0.4}px Cairo`; ctx.textAlign='center';
       ctx.fillText('10', x, y+r*0.1);
-      // الاسم
-      ctx.fillStyle = 'rgba(0,0,0,0.85)';
-      ctx.font = `bold ${r*0.3}px Cairo`;
+      ctx.fillStyle='rgba(0,0,0,0.85)'; ctx.font=`bold ${r*0.3}px Cairo`;
       const tw = ctx.measureText(name).width + 10;
       ctx.fillRect(x-tw/2, y+r*0.7, tw, r*0.4);
-      ctx.fillStyle = 'white';
-      ctx.fillText(name, x, y+r*1.0);
+      ctx.fillStyle='white'; ctx.fillText(name, x, y+r*1.0);
       ctx.restore();
     }
 
     function drawArrows() {
       pitchState.arrows.forEach(a => {
         const x1=a.x1*w, y1=a.y1*h, x2=a.x2*w, y2=a.y2*h;
-        ctx.strokeStyle = a.color||'#ff6b35'; ctx.lineWidth = 3;
-        ctx.setLineDash([8,4]);
+        ctx.strokeStyle=a.color||'#ff6b35'; ctx.lineWidth=3; ctx.setLineDash([8,4]);
         ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-        ctx.setLineDash([]);
-        const ang = Math.atan2(y2-y1, x2-x1);
-        ctx.fillStyle = a.color||'#ff6b35';
-        ctx.beginPath(); ctx.moveTo(x2,y2);
+        ctx.setLineDash([]); const ang=Math.atan2(y2-y1, x2-x1);
+        ctx.fillStyle=a.color||'#ff6b35'; ctx.beginPath(); ctx.moveTo(x2,y2);
         ctx.lineTo(x2-12*Math.cos(ang-0.5), y2-12*Math.sin(ang-0.5));
         ctx.lineTo(x2-12*Math.cos(ang+0.5), y2-12*Math.sin(ang+0.5));
         ctx.closePath(); ctx.fill();
       });
     }
 
-    function redraw() {
-      drawPitch();
-      drawArrows();
-      pitchState.dots.forEach((d,i) => {
-        const x = d.x * w, y = d.y * h;
-        const color = i===0 ? '#f5c842' : d.color || '#4facfe';
-        drawHalfShirt(x, y, w*0.04, color, d.name || '');
-      });
-    }
+    function redraw() { drawPitch(); drawArrows(); pitchState.dots.forEach((d,i) => { const x=d.x*w, y=d.y*h, color=i===0?'#f5c842':d.color||'#4facfe'; drawHalfShirt(x,y,w*0.04,color,d.name||''); }); }
 
-    if(pitchState.dots.length===0 && p) {
-      pitchState.dots.push({
-        x: (p.positionX||78)/100,
-        y: (p.positionY||35)/100,
-        name: currentLang==='ar'?p.name:(p.nameEn||p.name),
-        color: '#f5c842'
-      });
-    }
+    if(pitchState.dots.length===0 && p) { pitchState.dots.push({x:(p.positionX||78)/100, y:(p.positionY||35)/100, name:currentLang==='ar'?p.name:(p.nameEn||p.name), color:'#f5c842'}); }
 
-    function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches?e.touches[0].clientX:e.clientX;
-      const clientY = e.touches?e.touches[0].clientY:e.clientY;
-      return {x:(clientX-rect.left)/rect.width, y:(clientY-rect.top)/rect.height};
-    }
+    function getPos(e) { const rect=canvas.getBoundingClientRect(); const cx=e.touches?e.touches[0].clientX:e.clientX; const cy=e.touches?e.touches[0].clientY:e.clientY; return {x:(cx-rect.left)/rect.width, y:(cy-rect.top)/rect.height}; }
 
     canvas.onmousedown = e => {
-      const pos = getPos(e);
-      if(pitchState.tool==='move') {
-        for(let i=pitchState.dots.length-1;i>=0;i--) {
-          const d = pitchState.dots[i];
-          if(Math.hypot(pos.x-d.x, pos.y-d.y) < 0.03) {
-            dragIndex = i;
-            offsetX = d.x - pos.x;
-            offsetY = d.y - pos.y;
-            break;
-          }
-        }
-      } else if(pitchState.tool==='dot') {
-        const nameInput = document.getElementById('newPlayerNameInput');
-        const name = nameInput?.value?.trim() || `لاعب ${pitchState.dots.length+1}`;
-        const colors = ['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842','#00f2fe','#ff9f43'];
-        pitchState.dots.push({
-          x: pos.x, y: pos.y,
-          name: name,
-          color: colors[pitchState.dots.length % colors.length]
-        });
-        savePitchState(); redraw();
-      } else if(pitchState.tool==='arrow') {
-        arrowStart = pos;
-      }
+      const pos=getPos(e);
+      if(pitchState.tool==='move') { for(let i=pitchState.dots.length-1;i>=0;i--) { if(Math.hypot(pos.x-pitchState.dots[i].x, pos.y-pitchState.dots[i].y)<0.03) { dragIndex=i; offsetX=pitchState.dots[i].x-pos.x; offsetY=pitchState.dots[i].y-pos.y; break; } } }
+      else if(pitchState.tool==='dot') { const nm=document.getElementById('newPlayerNameInput')?.value?.trim()||`لاعب ${pitchState.dots.length+1}`; const colors=['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842']; pitchState.dots.push({x:pos.x, y:pos.y, name:nm, color:colors[pitchState.dots.length%colors.length]}); savePitchState(); redraw(); }
+      else if(pitchState.tool==='arrow') { pitchState.arrowStart=pos; }
     };
-    canvas.onmousemove = e => {
-      if(dragIndex>=0) {
-        const pos = getPos(e);
-        pitchState.dots[dragIndex].x = Math.min(0.96,Math.max(0.04, pos.x+offsetX));
-        pitchState.dots[dragIndex].y = Math.min(0.94,Math.max(0.06, pos.y+offsetY));
-        if(dragIndex===0 && p) {
-          p.positionX = Math.round(pitchState.dots[0].x*100);
-          p.positionY = Math.round(pitchState.dots[0].y*100);
-        }
-        redraw();
-      }
-    };
+    canvas.onmousemove = e => { if(dragIndex>=0) { const pos=getPos(e); pitchState.dots[dragIndex].x=Math.min(0.96,Math.max(0.04,pos.x+offsetX)); pitchState.dots[dragIndex].y=Math.min(0.94,Math.max(0.06,pos.y+offsetY)); if(dragIndex===0&&p){p.positionX=Math.round(pitchState.dots[0].x*100);p.positionY=Math.round(pitchState.dots[0].y*100);} redraw(); } };
     canvas.onmouseup = e => {
-      if(dragIndex>=0) {
-        if(dragIndex===0 && p) savePlayers();
-        savePitchState();
-      }
-      if(arrowStart && pitchState.tool==='arrow') {
-        const pos = getPos(e);
-        if(Math.hypot(pos.x-arrowStart.x, pos.y-arrowStart.y) > 0.015) {
-          pitchState.arrows.push({x1:arrowStart.x, y1:arrowStart.y, x2:pos.x, y2:pos.y, color:'#ff6b35'});
-          savePitchState(); redraw();
-        }
-        arrowStart = null;
-      }
-      dragIndex = -1;
+      if(dragIndex>=0) { if(dragIndex===0&&p) savePlayers(); savePitchState(); }
+      if(pitchState.tool==='arrow'&&pitchState.arrowStart) { const pos=getPos(e); if(Math.hypot(pos.x-pitchState.arrowStart.x, pos.y-pitchState.arrowStart.y)>0.015) { pitchState.arrows.push({x1:pitchState.arrowStart.x, y1:pitchState.arrowStart.y, x2:pos.x, y2:pos.y, color:'#ff6b35'}); savePitchState(); redraw(); } pitchState.arrowStart=null; }
+      dragIndex=-1;
     };
-
-    canvas.ontouchstart = e => {
-      e.preventDefault(); const pos = getPos(e);
-      if(pitchState.tool==='move') {
-        for(let i=pitchState.dots.length-1;i>=0;i--) {
-          if(Math.hypot(pos.x-pitchState.dots[i].x, pos.y-pitchState.dots[i].y) < 0.03) {
-            dragIndex = i; offsetX = pitchState.dots[i].x - pos.x; offsetY = pitchState.dots[i].y - pos.y; break;
-          }
-        }
-      } else if(pitchState.tool==='dot') {
-        const nameInput = document.getElementById('newPlayerNameInput');
-        const name = nameInput?.value?.trim() || `لاعب ${pitchState.dots.length+1}`;
-        const colors = ['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842','#00f2fe','#ff9f43'];
-        pitchState.dots.push({
-          x: pos.x, y: pos.y,
-          name: name,
-          color: colors[pitchState.dots.length % colors.length]
-        });
-        savePitchState(); redraw();
-      } else if(pitchState.tool==='arrow') {
-        arrowStart = pos;
-      }
-    };
-    canvas.ontouchmove = e => {
-      e.preventDefault();
-      if(dragIndex>=0) {
-        const pos = getPos(e);
-        pitchState.dots[dragIndex].x = Math.min(0.96,Math.max(0.04, pos.x+offsetX));
-        pitchState.dots[dragIndex].y = Math.min(0.94,Math.max(0.06, pos.y+offsetY));
-        if(dragIndex===0 && p) { p.positionX=Math.round(pitchState.dots[0].x*100); p.positionY=Math.round(pitchState.dots[0].y*100); }
-        redraw();
-      }
-    };
-    canvas.ontouchend = () => {
-      if(dragIndex>=0 && dragIndex===0 && p) savePlayers();
-      if(dragIndex>=0) savePitchState();
-      dragIndex = -1; arrowStart = null;
-    };
-
+    canvas.ontouchstart = e => { e.preventDefault(); const pos=getPos(e); if(pitchState.tool==='move') { for(let i=pitchState.dots.length-1;i>=0;i--) { if(Math.hypot(pos.x-pitchState.dots[i].x, pos.y-pitchState.dots[i].y)<0.03) { dragIndex=i; offsetX=pitchState.dots[i].x-pos.x; offsetY=pitchState.dots[i].y-pos.y; break; } } } else if(pitchState.tool==='dot') { const nm=document.getElementById('newPlayerNameInput')?.value?.trim()||`لاعب ${pitchState.dots.length+1}`; const colors=['#4facfe','#2ed573','#ff6b35','#a55eea','#ff4757','#f5c842']; pitchState.dots.push({x:pos.x, y:pos.y, name:nm, color:colors[pitchState.dots.length%colors.length]}); savePitchState(); redraw(); } else if(pitchState.tool==='arrow') { pitchState.arrowStart=pos; } };
+    canvas.ontouchmove = e => { e.preventDefault(); if(dragIndex>=0) { const pos=getPos(e); pitchState.dots[dragIndex].x=Math.min(0.96,Math.max(0.04,pos.x+offsetX)); pitchState.dots[dragIndex].y=Math.min(0.94,Math.max(0.06,pos.y+offsetY)); if(dragIndex===0&&p){p.positionX=Math.round(pitchState.dots[0].x*100);p.positionY=Math.round(pitchState.dots[0].y*100);} redraw(); } };
+    canvas.ontouchend = () => { if(dragIndex>=0&&dragIndex===0&&p) savePlayers(); if(dragIndex>=0) savePitchState(); dragIndex=-1; pitchState.arrowStart=null; };
     redraw();
   }
 
-  window.setTool = function(tool) {
-    pitchState.tool = tool;
-    ['toolMove','toolDot','toolArrow'].forEach(id => document.getElementById(id)?.classList.remove('active'));
-    const idMap = {move:'toolMove', dot:'toolDot', arrow:'toolArrow'};
-    document.getElementById(idMap[tool])?.classList.add('active');
-    savePitchState();
-  };
-  window.clearPitch = function() {
-    pitchState.dots = pitchState.dots.slice(0,1);
-    pitchState.arrows = [];
-    const p = getPlayer(currentPlayerId);
-    if(p && pitchState.dots[0]) {
-      pitchState.dots[0] = {
-        x:(p.positionX||78)/100,
-        y:(p.positionY||35)/100,
-        name: currentLang==='ar'?p.name:(p.nameEn||p.name),
-        color: '#f5c842'
-      };
-    }
-    savePitchState();
-    const canvas = document.getElementById('pitchCanvas');
-    if(canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); initPitch(p); }
-  };
+  window.setTool = function(tool) { pitchState.tool=tool; ['toolMove','toolDot','toolArrow'].forEach(id=>document.getElementById(id)?.classList.remove('active')); const m={move:'toolMove',dot:'toolDot',arrow:'toolArrow'}; document.getElementById(m[tool])?.classList.add('active'); savePitchState(); };
+  window.clearPitch = function() { pitchState.dots=pitchState.dots.slice(0,1); pitchState.arrows=[]; const p=getPlayer(currentPlayerId); if(p&&pitchState.dots[0]){pitchState.dots[0]={x:(p.positionX||78)/100,y:(p.positionY||35)/100,name:currentLang==='ar'?p.name:(p.nameEn||p.name),color:'#f5c842'};} savePitchState(); const canvas=document.getElementById('pitchCanvas'); if(canvas){const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);initPitch(p);} };
 
   function drawTrendChart(p) {
-    const canvas = document.getElementById('trendChart');
-    if(!canvas) return;
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 200;
-    const ctx = canvas.getContext('2d');
-    const data = p.levelHistory||[70,72,75,78,80,83,86,88,90];
+    const canvas=document.getElementById('trendChart'); if(!canvas) return;
+    canvas.width=canvas.parentElement.clientWidth; canvas.height=200; const ctx=canvas.getContext('2d');
+    const data=p.levelHistory||[70,72,75,78,80,83,86,88,90];
     const w=canvas.width, h=canvas.height, pad=20, maxV=99, minV=40;
-    ctx.clearRect(0,0,w,h);
-    ctx.beginPath(); ctx.strokeStyle='#4facfe'; ctx.lineWidth=3;
-    ctx.shadowColor='#4facfe'; ctx.shadowBlur=10;
-    data.forEach((v,i)=>{
-      const x=pad+(i/(data.length-1))*(w-pad*2);
-      const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2);
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
+    ctx.clearRect(0,0,w,h); ctx.beginPath(); ctx.strokeStyle='#4facfe'; ctx.lineWidth=3; ctx.shadowColor='#4facfe'; ctx.shadowBlur=10;
+    data.forEach((v,i)=>{ const x=pad+(i/(data.length-1))*(w-pad*2); const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
     ctx.stroke(); ctx.shadowBlur=0;
-    data.forEach((v,i)=>{
-      const x=pad+(i/(data.length-1))*(w-pad*2);
-      const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2);
-      ctx.fillStyle='#4facfe'; ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#fff'; ctx.font='bold 10px Cairo'; ctx.textAlign='center'; ctx.fillText(v,x,y-14);
-    });
+    data.forEach((v,i)=>{ const x=pad+(i/(data.length-1))*(w-pad*2); const y=h-pad-((v-minV)/(maxV-minV))*(h-pad*2); ctx.fillStyle='#4facfe'; ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.font='bold 10px Cairo'; ctx.textAlign='center'; ctx.fillText(v,x,y-14); });
   }
 
   function drawRadarChart(p) {
-    const canvas = document.getElementById('radarChart');
-    if(!canvas) return;
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 220;
-    const ctx = canvas.getContext('2d');
+    const canvas=document.getElementById('radarChart'); if(!canvas) return;
+    canvas.width=canvas.parentElement.clientWidth; canvas.height=220; const ctx=canvas.getContext('2d');
     const w=canvas.width, h=canvas.height, cx=w/2, cy=h/2, r=Math.min(w,h)/2-20;
-    const labels = [t('pace'),t('stamina'),t('strength'),t('dribbling'),t('passing'),t('shooting'),t('positioning2'),t('vision')];
-    const vals = [p.pace||50,p.stamina||50,p.strength||50,p.dribbling||50,p.passing||50,p.shooting||50,p.posSkill||50,p.vision||50];
-    const n=labels.length;
-    ctx.clearRect(0,0,w,h);
-    for(let j=5;j>=1;j--) {
-      ctx.beginPath();
-      for(let i=0;i<n;i++) {
-        const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(j/5);
-        const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
-        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-      }
-      ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.stroke();
-    }
-    ctx.beginPath();
-    vals.forEach((v,i)=>{
-      const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(v/99);
-      const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
-    ctx.closePath(); ctx.fillStyle='rgba(79,172,254,0.3)'; ctx.fill();
-    ctx.strokeStyle='#4facfe'; ctx.lineWidth=2; ctx.stroke();
-    labels.forEach((l,i)=>{
-      const ang=(Math.PI*2/n)*i-Math.PI/2, x=cx+(r+15)*Math.cos(ang), y=cy+(r+15)*Math.sin(ang);
-      ctx.fillStyle='#fff'; ctx.font='10px Cairo'; ctx.textAlign='center'; ctx.fillText(l,x,y);
-    });
+    const labels=[t('pace'),t('stamina'),t('strength'),t('dribbling'),t('passing'),t('shooting'),t('positioning2'),t('vision')];
+    const vals=[p.pace||50,p.stamina||50,p.strength||50,p.dribbling||50,p.passing||50,p.shooting||50,p.posSkill||50,p.vision||50];
+    const n=labels.length; ctx.clearRect(0,0,w,h);
+    for(let j=5;j>=1;j--) { ctx.beginPath(); for(let i=0;i<n;i++){ const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(j/5); const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.closePath(); ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.stroke(); }
+    ctx.beginPath(); vals.forEach((v,i)=>{ const ang=(Math.PI*2/n)*i-Math.PI/2, rr=r*(v/99); const x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }); ctx.closePath(); ctx.fillStyle='rgba(79,172,254,0.3)'; ctx.fill(); ctx.strokeStyle='#4facfe'; ctx.lineWidth=2; ctx.stroke();
+    labels.forEach((l,i)=>{ const ang=(Math.PI*2/n)*i-Math.PI/2, x=cx+(r+15)*Math.cos(ang), y=cy+(r+15)*Math.sin(ang); ctx.fillStyle='#fff'; ctx.font='10px Cairo'; ctx.textAlign='center'; ctx.fillText(l,x,y); });
   }
 
   function saveEdit() {
-    const p = getPlayer(currentPlayerId); if(!p) return;
-    p.name = document.getElementById('eNameAr')?.value||p.name||'';
-    p.nameEn = document.getElementById('eNameEn')?.value||p.nameEn||'';
-    p.age = parseInt(document.getElementById('eAge')?.value)||p.age||20;
-    p.position = document.getElementById('ePosAr')?.value||p.position||'';
-    p.positionEn = document.getElementById('ePosEn')?.value||p.positionEn||'';
-    ['pace','stamina','strength','dribbling','passing','shooting','posSkill','vision'].forEach(s=>{
-      const v=parseInt(document.getElementById('e_'+s)?.value);
-      if(!isNaN(v)) p[s]=Math.min(99,Math.max(0,v));
-    });
-    p.strengths = document.getElementById('eStr')?.value||p.strengths||'';
-    p.weaknesses = document.getElementById('eWeak')?.value||p.weaknesses||'';
-    p.sprintTime = parseFloat(document.getElementById('eSprint')?.value)||p.sprintTime||3.1;
-    p.agilityTest = parseFloat(document.getElementById('eAgility')?.value)||p.agilityTest||4.2;
-    p.enduranceTest = parseInt(document.getElementById('eEndurance')?.value)||p.enduranceTest||92;
-    p.jumpHeight = parseInt(document.getElementById('eJump')?.value)||p.jumpHeight||55;
-    p.heartRate = parseInt(document.getElementById('eHR')?.value)||p.heartRate||65;
-    p.vo2max = parseInt(document.getElementById('eVO2')?.value)||p.vo2max||60;
-    p.recovery = parseInt(document.getElementById('eRec')?.value)||p.recovery||88;
-    p.injuryRisk = parseInt(document.getElementById('eInj')?.value)||p.injuryRisk||10;
-    ['coreRole','defensiveDuties','positioning','transitions','technicalSkills','tacticalIntel'].forEach((key,i)=>{
-      const ids = ['eCoreRole','eDef','ePosSec','eTrans','eTech','eTac'];
-      const el = document.getElementById(ids[i]);
-      if(el) p[key] = el.value||p[key]||'';
-    });
+    const p=getPlayer(currentPlayerId); if(!p) return;
+    p.name=document.getElementById('eNameAr')?.value||p.name||''; p.nameEn=document.getElementById('eNameEn')?.value||p.nameEn||'';
+    p.age=parseInt(document.getElementById('eAge')?.value)||p.age||20;
+    p.position=document.getElementById('ePosAr')?.value||p.position||''; p.positionEn=document.getElementById('ePosEn')?.value||p.positionEn||'';
+    ['pace','stamina','strength','dribbling','passing','shooting','posSkill','vision'].forEach(s=>{ const v=parseInt(document.getElementById('e_'+s)?.value); if(!isNaN(v)) p[s]=Math.min(99,Math.max(0,v)); });
+    p.strengths=document.getElementById('eStr')?.value||p.strengths||''; p.weaknesses=document.getElementById('eWeak')?.value||p.weaknesses||'';
+    p.sprintTime=parseFloat(document.getElementById('eSprint')?.value)||p.sprintTime||3.1;
+    p.agilityTest=parseFloat(document.getElementById('eAgility')?.value)||p.agilityTest||4.2;
+    p.enduranceTest=parseInt(document.getElementById('eEndurance')?.value)||p.enduranceTest||92;
+    p.jumpHeight=parseInt(document.getElementById('eJump')?.value)||p.jumpHeight||55;
+    p.heartRate=parseInt(document.getElementById('eHR')?.value)||p.heartRate||65;
+    p.vo2max=parseInt(document.getElementById('eVO2')?.value)||p.vo2max||60;
+    p.recovery=parseInt(document.getElementById('eRec')?.value)||p.recovery||88;
+    p.injuryRisk=parseInt(document.getElementById('eInj')?.value)||p.injuryRisk||10;
+    ['coreRole','defensiveDuties','positioning','transitions','technicalSkills','tacticalIntel'].forEach((key,i)=>{ const ids=['eCoreRole','eDef','ePosSec','eTrans','eTech','eTac']; const el=document.getElementById(ids[i]); if(el) p[key]=el.value||p[key]||''; });
     savePlayers();
-    // تحديث اسم اللاعب في الملعب
-    if(pitchState.dots.length>0) {
-      pitchState.dots[0].name = currentLang==='ar'?p.name:(p.nameEn||p.name);
-      savePitchState();
-    }
-    populateSelect();
-    renderTab('overview');
-    alert('تم الحفظ ✓');
+    if(pitchState.dots.length>0) { pitchState.dots[0].name=currentLang==='ar'?p.name:(p.nameEn||p.name); savePitchState(); }
+    populateSelect(); renderTab('overview'); alert('تم الحفظ ✓');
   }
 
   window.uploadPhoto = function(e) {
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const img = new Image(); img.src = ev.target.result;
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const size = Math.min(img.width, img.height);
-        canvas.width = 200; canvas.height = 200;
-        const ctx = canvas.getContext('2d');
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(ev) {
+      const img=new Image(); img.src=ev.target.result;
+      img.onload=function() {
+        const canvas=document.createElement('canvas'); const size=Math.min(img.width, img.height);
+        canvas.width=200; canvas.height=200; const ctx=canvas.getContext('2d');
         ctx.beginPath(); ctx.arc(100,100,98,0,Math.PI*2); ctx.clip();
-        ctx.drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 200, 200);
-        const p = getPlayer(currentPlayerId);
-        if(p) { p.photo = canvas.toDataURL(); savePlayers(); }
+        ctx.drawImage(img,(img.width-size)/2,(img.height-size)/2,size,size,0,0,200,200);
+        const p=getPlayer(currentPlayerId); if(p){p.photo=canvas.toDataURL(); savePlayers();}
         renderTab('overview');
       };
     };
@@ -894,91 +682,43 @@
   function deletePlayer() {
     if(!currentPlayerId) return;
     if(!confirm(t('deleteConfirm'))) return;
-    players = players.filter(p=>p.id!==currentPlayerId);
-    savePlayers();
-    currentPlayerId = players.length ? players[0].id : null;
-    populateSelect();
-    if(currentPlayerId) document.getElementById('playerSelect').value = currentPlayerId;
-    else document.getElementById('profileContent').innerHTML = `<p style="text-align:center;padding:40px;">${t('noPlayers')}</p>`;
+    players=players.filter(p=>p.id!==currentPlayerId); savePlayers();
+    currentPlayerId=players.length?players[0].id:null; populateSelect();
+    if(currentPlayerId) document.getElementById('playerSelect').value=currentPlayerId;
+    else document.getElementById('profileContent').innerHTML=`<p style="text-align:center;padding:40px;">${t('noPlayers')}</p>`;
     renderTab('overview');
   }
 
   function addPlayer() {
-    const id = Date.now().toString();
-    players.push({
-      id, name:'لاعب جديد', nameEn:'New Player', age:22,
-      position:'جناح', positionEn:'Winger',
-      pace:75,stamina:75,strength:70,dribbling:78,passing:75,shooting:72,posSkill:75,vision:75,
-      strengths:'',weaknesses:'',
-      heatmap:Array(15).fill(0.3), photo:'', positionX:75,positionY:40,
-      heartRate:68,vo2max:55,recovery:80,injuryRisk:15,
-      sprintTime:3.3,agilityTest:4.5,enduranceTest:80,jumpHeight:45,
-      levelHistory:[65,67,70,72,74,75],
-      coreRole:'',defensiveDuties:'',positioning:'',transitions:'',technicalSkills:'',tacticalIntel:''
-    });
-    savePlayers(); populateSelect();
-    currentPlayerId = id;
-    document.getElementById('playerSelect').value = id;
+    const id=Date.now().toString();
+    players.push({id,name:'لاعب جديد',nameEn:'New Player',age:22,position:'جناح',positionEn:'Winger',pace:75,stamina:75,strength:70,dribbling:78,passing:75,shooting:72,posSkill:75,vision:75,strengths:'',weaknesses:'',heatmap:Array(15).fill(0.3),photo:'',positionX:75,positionY:40,heartRate:68,vo2max:55,recovery:80,injuryRisk:15,sprintTime:3.3,agilityTest:4.5,enduranceTest:80,jumpHeight:45,levelHistory:[65,67,70,72,74,75],coreRole:'',defensiveDuties:'',positioning:'',transitions:'',technicalSkills:'',tacticalIntel:''});
+    savePlayers(); populateSelect(); currentPlayerId=id;
+    document.getElementById('playerSelect').value=id;
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelector('[data-tab="overview"]').classList.add('active');
     renderTab('overview');
   }
 
   function switchLang() {
-    currentLang = currentLang==='ar'?'en':'ar';
-    document.getElementById('langText').textContent = currentLang==='ar'?'English':'العربية';
-    document.getElementById('mainTitle').textContent = t('appTitle');
-    document.querySelectorAll('.tab').forEach(tab=>{
-      const k=tab.dataset.tab;
-      const titles = {overview:'tabOverview', skills:'tabSkills', pitch:'tabPitch', trend:'tabTrend', edit:'tabEdit'};
-      const icons = {overview:'fa-id-card', skills:'fa-chart-pie', pitch:'fa-futbol', trend:'fa-chart-line', edit:'fa-edit'};
-      if(titles[k]) tab.innerHTML = `<i class="fas ${icons[k]}"></i> <span>${t(titles[k])}</span>`;
-    });
-    // تحديث اسم اللاعب الأول في الملعب
-    if(pitchState.dots.length>0 && currentPlayerId) {
-      const p = getPlayer(currentPlayerId);
-      if(p) pitchState.dots[0].name = currentLang==='ar'?p.name:(p.nameEn||p.name);
-      savePitchState();
-    }
-    populateSelect();
-    renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
+    currentLang=currentLang==='ar'?'en':'ar';
+    document.getElementById('langText').textContent=currentLang==='ar'?'English':'العربية';
+    document.getElementById('mainTitle').textContent=t('appTitle');
+    document.querySelectorAll('.tab').forEach(tab=>{ const k=tab.dataset.tab; const titles={overview:'tabOverview',skills:'tabSkills',pitch:'tabPitch',trend:'tabTrend',edit:'tabEdit'}; const icons={overview:'fa-id-card',skills:'fa-chart-pie',pitch:'fa-futbol',trend:'fa-chart-line',edit:'fa-edit'}; if(titles[k]) tab.innerHTML=`<i class="fas ${icons[k]}"></i> <span>${t(titles[k])}</span>`; });
+    if(pitchState.dots.length>0&&currentPlayerId){const p=getPlayer(currentPlayerId);if(p)pitchState.dots[0].name=currentLang==='ar'?p.name:(p.nameEn||p.name);savePitchState();}
+    populateSelect(); renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
   }
 
-  window.addEventListener('load', ()=>{
+  window.addEventListener('load',()=>{
     loadPlayers(); populateSelect();
-    if(players.length>0){
-      currentPlayerId=players[0].id;
-      document.getElementById('playerSelect').value=currentPlayerId;
-    }
+    if(players.length>0){currentPlayerId=players[0].id;document.getElementById('playerSelect').value=currentPlayerId;}
     renderTab('overview');
-    document.getElementById('playerSelect').addEventListener('change', e=>{
-      currentPlayerId=e.target.value;
-      // تحديث الملعب للاعب الجديد
-      const p = getPlayer(currentPlayerId);
-      if(p && pitchState.dots.length>0) {
-        pitchState.dots[0] = {
-          x: (p.positionX||78)/100,
-          y: (p.positionY||35)/100,
-          name: currentLang==='ar'?p.name:(p.nameEn||p.name),
-          color: '#f5c842'
-        };
-        savePitchState();
-      }
-      renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');
-    });
-    document.querySelectorAll('.tab').forEach(tab=>{
-      tab.addEventListener('click', function(){
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        this.classList.add('active');
-        renderTab(this.dataset.tab);
-      });
-    });
-    document.getElementById('langToggle').addEventListener('click', switchLang);
-    document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
-    document.getElementById('deletePlayerBtn').addEventListener('click', deletePlayer);
+    document.getElementById('playerSelect').addEventListener('change',e=>{currentPlayerId=e.target.value;const p=getPlayer(currentPlayerId);if(p&&pitchState.dots.length>0){pitchState.dots[0]={x:(p.positionX||78)/100,y:(p.positionY||35)/100,name:currentLang==='ar'?p.name:(p.nameEn||p.name),color:'#f5c842'};savePitchState();}renderTab(document.querySelector('.tab.active')?.dataset.tab||'overview');});
+    document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');renderTab(this.dataset.tab);});});
+    document.getElementById('langToggle').addEventListener('click',switchLang);
+    document.getElementById('addPlayerBtn').addEventListener('click',addPlayer);
+    document.getElementById('deletePlayerBtn').addEventListener('click',deletePlayer);
   });
 })();
 </script>
 </body>
 </html>
-```
